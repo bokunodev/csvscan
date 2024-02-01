@@ -2,10 +2,12 @@ package csvscan
 
 import (
 	"bytes"
+	"encoding/csv"
 	"encoding/json"
 	"errors"
 	"io"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -41,7 +43,7 @@ func TestScaner(t *testing.T) {
 	defer file.Close()
 
 	scn := New()
-	if err := scn.Init(file, (*Customer)(nil)); err != nil {
+	if err := scn.Init(csv.NewReader(file), (*Customer)(nil)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -65,7 +67,8 @@ func TestScaner(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if bb.String() != expected_output {
+	//  we need to trim trailing new line added by the json encoder
+	if strings.TrimSpace(bb.String()) != expected_output {
 		t.Fatal("unexpected result")
 	}
 }

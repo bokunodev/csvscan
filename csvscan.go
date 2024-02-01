@@ -5,7 +5,6 @@ import (
 	"encoding/csv"
 	"errors"
 	"fmt"
-	"io"
 	"reflect"
 	"strconv"
 	"strings"
@@ -20,11 +19,13 @@ func New() *Scanner {
 	return &Scanner{}
 }
 
-func (scn *Scanner) Init(file io.Reader, ptr any) error {
+// Init read csv header and cache struct field indexes
+// [encoding/csv.Reader] cannot be reused
+func (scn *Scanner) Init(reader *csv.Reader, ptr any) error {
 	scn.reader = nil
 	scn.indexes = scn.indexes[:0]
 
-	scn.reader = csv.NewReader(file)
+	scn.reader = reader
 	dst_typ := reflect.TypeOf(ptr)
 	if dst_typ.Kind() != reflect.Pointer || dst_typ.Elem().Kind() != reflect.Struct {
 		return errors.New("`ptr` must be a pointer to struct")
@@ -50,6 +51,7 @@ func (scn *Scanner) Init(file io.Reader, ptr any) error {
 	return nil
 }
 
+// Scan scan csv value into dst pointer
 func (scn *Scanner) Scan(dst any) error {
 	dst_val := reflect.ValueOf(dst).Elem()
 
